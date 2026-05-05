@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYSTEM BREACH v3.7</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #00ff41;
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ===== MATRIX RAIN ===== */
+  #matrix-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.15;
+  }
+
+  /* ===== SCANLINES ===== */
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 999;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.05) 0px,
+      rgba(0,0,0,0.05) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(transparent 50%, rgba(0, 255, 65, 0.02) 50%);
+    background-size: 100% 4px;
+    animation: scanmove 8s linear infinite;
+  }
+
+  @keyframes scanmove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(100px); }
+  }
+
+  /* ===== SCREEN FLICKER ===== */
+  .flicker {
+    animation: flicker 0.15s infinite;
+  }
+
+  @keyframes flicker {
+    0% { opacity: 0.97; }
+    5% { opacity: 0.9; }
+    10% { opacity: 0.98; }
+    15% { opacity: 0.92; }
+    20% { opacity: 0.98; }
+    50% { opacity: 1; }
+    80% { opacity: 0.96; }
+    90% { opacity: 0.9; }
+    100% { opacity: 0.98; }
+  }
+
+  /* ===== LOGIN SCREEN ===== */
+  #login-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: radial-gradient(ellipse at center, #0d1a0d 0%, #050505 70%);
+  }
+
+  .skull-art {
+    color: #00ff41;
+    font-size: 14px;
+    line-height: 1.2;
+    margin-bottom: 30px;
+    text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 40px #00cc33;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 40px #00cc33; }
+    50% { text-shadow: 0 0 15px #00ff41, 0 0 30px #00ff41, 0 0 60px #00cc33, 0 0 80px #009922; }
+  }
+
+  .system-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 10px #00ff41, 0 0 30px #00ff41;
+    text-transform: uppercase;
+  }
+
+  .system-subtitle {
+    font-size: 12px;
+    color: #00cc33;
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+    opacity: 0.7;
+  }
+
+  .login-box {
+    background: rgba(0, 255, 65, 0.03);
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    padding: 30px 40px;
+    border-radius: 4px;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.05), inset 0 0 30px rgba(0, 255, 65, 0.02);
+  }
+
+  .login-box::before {
+    content: '> SECURE_AUTH_PROTOCOL';
+    position: absolute;
+    top: -22px;
+    left: 10px;
+    font-size: 11px;
+    color: #00cc33;
+    background: #0a0a0a;
+    padding: 2px 8px;
+  }
+
+  .login-label {
+    font-size: 12px;
+    color: #00cc33;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .input-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .input-wrapper::before {
+    content: '$';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #00ff41;
+    font-size: 18px;
+  }
+
+  #password-input {
+    background: rgba(0, 255, 65, 0.05);
+    border: 1px solid rgba(0, 255, 65, 0.4);
+    color: #00ff41;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    padding: 12px 15px 12px 35px;
+    width: 280px;
+    outline: none;
+    letter-spacing: 8px;
+    text-shadow: 0 0 8px #00ff41;
+    caret-color: #00ff41;
+    border-radius: 2px;
+  }
+
+  #password-input:focus {
+    border-color: #00ff41;
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.2), inset 0 0 15px rgba(0, 255, 65, 0.05);
+  }
+
+  #password-input::placeholder {
+    letter-spacing: 2px;
+    font-size: 12px;
+    color: rgba(0, 255, 65, 0.3);
+    text-shadow: none;
+  }
+
+  #login-btn {
+    background: transparent;
+    border: 1px solid #00ff41;
+    color: #00ff41;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 10px 40px;
+    cursor: pointer;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    width: 100%;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+
+  #login-btn:hover {
+    background: rgba(0, 255, 65, 0.15);
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.3), inset 0 0 20px rgba(0, 255, 65, 0.1);
+    text-shadow: 0 0 8px #00ff41;
+  }
+
+  #login-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.1), transparent);
+    animation: btn-sweep 3s infinite;
+  }
+
+  @keyframes btn-sweep {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  .login-warning {
+    margin-top: 20px;
+    font-size: 10px;
+    color: #ff3333;
+    letter-spacing: 2px;
+    text-align: center;
+    animation: blink-warn 1.5s step-end infinite;
+  }
+
+  @keyframes blink-warn {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ===== HACK SCREEN ===== */
+  #hack-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    padding: 20px;
+    background: radial-gradient(ellipse at center, #0a0f0a 0%, #020502 70%);
+  }
+
+  .hack-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+  }
+
+  .hack-header-left {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: #ff0040;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px #ff0040;
+  }
+
+  .hack-header-right {
+    font-size: 11px;
+    color: #ff0040;
+  }
+
+  .hack-body {
+    flex: 1;
+    display: flex;
+    gap: 15px;
+    overflow: hidden;
+  }
+
+  .hack-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .hack-right {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Terminal */
+  .terminal-box {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    border-radius: 3px;
+    padding: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .terminal-box::before {
+    content: 'TERMINAL';
+    position: absolute;
+    top: -1px; right: 10px;
+    font-size: 9px;
+    color: #00ff41;
+    background: #0a0a0a;
+    padding: 1px 6px;
+    letter-spacing: 2px;
+  }
+
+  .terminal-content {
+    height: 100%;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #00ff41;
+  }
+
+  .terminal-line {
+    opacity: 0;
+    animation: terminal-appear 0.1s forwards;
+  }
+
+  @keyframes terminal-appear {
+    to { opacity: 0.9; }
+  }
+
+  .terminal-line.error { color: #ff3333; }
+  .terminal-line.warning { color: #ffaa00; }
+  .terminal-line.success { color: #00ff41; }
+  .terminal-line.info { color: #00aaff; }
+
+  /* Password crack box */
+  .crack-box {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #ff0040;
+    border-radius: 3px;
+    padding: 15px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(255, 0, 64, 0.1);
+  }
+
+  .crack-box::before {
+    content: 'PASSWORD CRACKER';
+    position: absolute;
+    top: -1px; right: 10px;
+    font-size: 9px;
+    color: #ff0040;
+    background: #0a0a0a;
+    padding: 1px 6px;
+    letter-spacing: 2px;
+  }
+
+  .crack-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    color: #ff0040;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-shadow: 0 0 8px rgba(255, 0, 64, 0.5);
+  }
+
+  .crack-display {
+    background: #000;
+    border: 1px solid rgba(255, 0, 64, 0.3);
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: center;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .crack-display::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: #ff0040;
+    animation: scan-red 2s linear infinite;
+  }
+
+  @keyframes scan-red {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+
+  .crack-chars {
+    font-size: 32px;
+    letter-spacing: 10px;
+    color: #ff0040;
+    text-shadow: 0 0 15px #ff0040, 0 0 30px rgba(255, 0, 64, 0.5);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+  }
+
+  .crack-chars.cracked {
+    color: #00ff41;
+    text-shadow: 0 0 15px #00ff41, 0 0 30px rgba(0, 255, 65, 0.5);
+  }
+
+  .crack-status {
+    font-size: 10px;
+    color: #ff0040;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-top: 8px;
+  }
+
+  /* Progress bar */
+  .progress-section {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    border-radius: 3px;
+    padding: 12px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+
+  .progress-bar-bg {
+    background: rgba(0, 255, 65, 0.1);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00ff41, #00cc33);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px #00ff41;
+    position: relative;
+  }
+
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0;
+    width: 20px; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+    animation: shimmer 1s infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    border-radius: 3px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 6px;
+    background: rgba(0, 255, 65, 0.03);
+    border-radius: 2px;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    color: #00ff41;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  }
+
+  .stat-value.danger { color: #ff0040; text-shadow: 0 0 8px rgba(255, 0, 64, 0.5); }
+
+  .stat-label {
+    font-size: 8px;
+    color: rgba(0, 255, 65, 0.5);
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+
+  /* Network box */
+  .network-box {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    border-radius: 3px;
+    padding: 12px;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .network-box::before {
+    content: 'NETWORK PACKETS';
+    position: absolute;
+    top: -1px; right: 10px;
+    font-size: 9px;
+    color: #00aaff;
+    background: #0a0a0a;
+    padding: 1px 6px;
+    letter-spacing: 2px;
+  }
+
+  .network-content {
+    font-size: 9px;
+    color: #00aaff;
+    line-height: 1.4;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* ===== BREACH SCREEN ===== */
+  #breach-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 20;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: #000;
+  }
+
+  .breach-glow {
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 255, 65, 0.15) 0%, transparent 70%);
+    animation: breach-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes breach-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+  }
+
+  .breach-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: #00ff41;
+    text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41, 0 0 80px #00cc33;
+    letter-spacing: 10px;
+    z-index: 1;
+    animation: breach-appear 0.5s ease-out;
+  }
+
+  @keyframes breach-appear {
+    0% { transform: scale(3); opacity: 0; }
+    60% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .breach-subtitle {
+    font-size: 14px;
+    color: #00cc33;
+    letter-spacing: 5px;
+    margin-top: 15px;
+    z-index: 1;
+    opacity: 0;
+    animation: fade-in 0.5s 0.5s forwards;
+  }
+
+  @keyframes fade-in {
+    to { opacity: 0.8; }
+  }
+
+  .breach-password {
+    margin-top: 40px;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .breach-password-label {
+    font-size: 12px;
+    color: #ff0040;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+  }
+
+  .breach-password-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 56px;
+    font-weight: 900;
+    color: #00ff41;
+    text-shadow: 0 0 30px #00ff41, 0 0 60px #00ff41, 0 0 100px #00cc33, 0 0 150px rgba(0, 255, 65, 0.3);
+    letter-spacing: 15px;
+    animation: password-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes password-glow {
+    0%, 100% { text-shadow: 0 0 30px #00ff41, 0 0 60px #00ff41, 0 0 100px #00cc33; }
+    50% { text-shadow: 0 0 40px #00ff41, 0 0 80px #00ff41, 0 0 120px #00cc33, 0 0 200px rgba(0, 255, 65, 0.2); }
+  }
+
+  .breach-info {
+    margin-top: 50px;
+    z-index: 1;
+    text-align: center;
+    font-size: 10px;
+    color: rgba(0, 255, 65, 0.4);
+    letter-spacing: 2px;
+  }
+
+  .breach-timestamp {
+    margin-top: 20px;
+    z-index: 1;
+    font-size: 11px;
+    color: rgba(0, 255, 65, 0.3);
+  }
+
+  /* Glitch effect */
+  .glitch {
+    animation: glitch 0.3s infinite;
+  }
+
+  @keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-3px, 3px); }
+    40% { transform: translate(3px, -3px); }
+    60% { transform: translate(-3px, -3px); }
+    80% { transform: translate(3px, 3px); }
+    100% { transform: translate(0); }
+  }
+
+  .glitch-text {
+    position: relative;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  .glitch-text::before {
+    color: #ff0040;
+    animation: glitch-left 0.3s infinite;
+    clip-path: inset(0 0 0 0);
+  }
+
+  .glitch-text::after {
+    color: #00aaff;
+    animation: glitch-right 0.3s infinite;
+    clip-path: inset(0 0 0 0);
+  }
+
+  @keyframes glitch-left {
+    0% { clip-path: inset(40% 0 20% 0); transform: translate(-3px, 0); }
+    25% { clip-path: inset(10% 0 60% 0); transform: translate(3px, 0); }
+    50% { clip-path: inset(60% 0 10% 0); transform: translate(-2px, 0); }
+    75% { clip-path: inset(30% 0 40% 0); transform: translate(2px, 0); }
+    100% { clip-path: inset(50% 0 30% 0); transform: translate(-1px, 0); }
+  }
+
+  @keyframes glitch-right {
+    0% { clip-path: inset(20% 0 40% 0); transform: translate(3px, 0); }
+    25% { clip-path: inset(60% 0 10% 0); transform: translate(-3px, 0); }
+    50% { clip-path: inset(10% 0 60% 0); transform: translate(2px, 0); }
+    75% { clip-path: inset(40% 0 30% 0); transform: translate(-2px, 0); }
+    100% { clip-path: inset(30% 0 50% 0); transform: translate(1px, 0); }
+  }
+
+  /* Red flash overlay */
+  .red-flash {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(255, 0, 0, 0.1);
+    z-index: 998;
+    pointer-events: none;
+    opacity: 0;
+    animation: red-flash-anim 0.5s ease-out;
+  }
+
+  @keyframes red-flash-anim {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* Loading dots */
+  .loading-dots::after {
+    content: '';
+    animation: dots 1.5s steps(4, end) infinite;
+  }
+
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+  }
+
+  /* IP scroll */
+  .ip-scroll {
+    position: fixed;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 9px;
+    color: rgba(0, 170, 255, 0.3);
+    letter-spacing: 1px;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hack-body {
+      flex-direction: column;
+    }
+    .hack-right {
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    .crack-box { flex: 1; min-width: 200px; }
+    .system-title { font-size: 20px; letter-spacing: 4px; }
+    .breach-text { font-size: 32px; letter-spacing: 5px; }
+    .breach-password-value { font-size: 36px; letter-spacing: 8px; }
+    .crack-chars { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+<div class="scanlines"></div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <pre class="skull-art">
+    ██████╗ ██╗   ██╗███████╗███████╗████████╗
+    ██╔══██╗██║   ██║██╔════╝██╔════╝╚══██╔══╝
+    ██████╔╝██║   ██║███████╗███████╗   ██║   
+    ██╔══██╗██║   ██║╚════██║╚════██║   ██║   
+    ██████╔╝╚██████╔╝███████║███████║   ██║   
+    ╚═════╝  ╚═════╝ ╚══════╝╚══════╝   ╚═══╝   
+  </pre>
+  <div class="system-title">SYSTEM BREACH</div>
+  <div class="system-subtitle">// SECURE AUTHENTICATION REQUIRED //</div>
+  
+  <div class="login-box">
+    <div class="login-label">ACCESS CODE:</div>
+    <div class="input-wrapper">
+      <input type="password" id="password-input" placeholder="ENTER CODE" maxlength="12" autofocus>
+    </div>
+    <button id="login-btn" onclick="startHack()">AUTHORIZE</button>
+  </div>
+  
+  <div class="login-warning">⚠ UNAUTHORIZED ACCESS WILL BE PROSECUTED ⚠</div>
+</div>
+
+<!-- HACK SCREEN -->
+<div id="hack-screen" class="flicker">
+  <div class="hack-header">
+    <div class="hack-header-left glitch-text" data-text="BREACHING SYSTEM">BREACHING SYSTEM</div>
+    <div class="hack-header-right" id="hack-timer">00:10</div>
+  </div>
+  
+  <div class="hack-body">
+    <div class="hack-left">
+      <div class="terminal-box">
+        <div class="terminal-content" id="terminal-content"></div>
+      </div>
+    </div>
+    
+    <div class="hack-right">
+      <div class="crack-box">
+        <div class="crack-title">BRUTE FORCE ATTACK</div>
+        <div class="crack-display">
+          <div class="crack-chars" id="crack-chars">------</div>
+          <div class="crack-status" id="crack-status">INITIALIZING...</div>
+        </div>
+      </div>
+      
+      <div class="progress-section">
+        <div class="progress-label">
+          <span style="color: #00ff41;">BREACH PROGRESS</span>
+          <span id="progress-percent" style="color: #00ff41;">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="stat-attempts">0</div>
+          <div class="stat-label">ATTEMPTS</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value danger" id="stat-threads">0</div>
+          <div class="stat-label">THREADS</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-speed">0</div>
+          <div class="stat-label">K/s</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value danger" id="stat-firewall">ACTIVE</div>
+          <div class="stat-label">FIREWALL</div>
+        </div>
+      </div>
+      
+      <div class="network-box">
+        <div class="network-content" id="network-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BREACH SCREEN -->
+<div id="breach-screen">
+  <div class="breach-glow"></div>
+  <div class="breach-text glitch-text" data-text="BREACHED">BREACHED</div>
+  <div class="breach-subtitle">// SYSTEM COMPROMISED //</div>
+  <div class="breach-password">
+    <div class="breach-password-label">EXTRACTED ACCESS CODE:</div>
+    <div class="breach-password-value" id="breach-password-value"></div>
+  </div>
+  <div class="breach-info">ALL DATA HAS BEEN SUCCESSFULLY EXTRACTED</div>
+  <div class="breach-timestamp" id="breach-timestamp"></div>
+</div>
+
+<div class="ip-scroll" id="ip-scroll"></div>
+
+<script>
+// ===== MATRIX RAIN =====
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const matrixChars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
+const fontSize = 14;
+let columns = Math.floor(canvas.width / fontSize);
+let drops = Array(columns).fill(1);
+
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#00ff41';
+  ctx.font = fontSize + 'px monospace';
+  
+  for (let i = 0; i < drops.length; i++) {
+    const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+      drops[i] = 0;
+    }
+    drops[i]++;
+  }
+}
+
+setInterval(drawMatrix, 50);
+
+// ===== PASSWORD INPUT =====
+const passwordInput = document.getElementById('password-input');
+passwordInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') startHack();
+});
+
+// Only allow numbers
+passwordInput.addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/[^0-9]/g, '');
+});
+
+let targetPassword = '';
+let hackInterval = null;
+
+function startHack() {
+  targetPassword = passwordInput.value.trim();
+  if (!targetPassword) {
+    passwordInput.style.borderColor = '#ff0040';
+    passwordInput.placeholder = 'ENTER A CODE!';
+    setTimeout(() => {
+      passwordInput.style.borderColor = 'rgba(0, 255, 65, 0.4)';
+      passwordInput.placeholder = 'ENTER CODE';
+    }, 1000);
+    return;
+  }
+  
+  // Transition to hack screen
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('hack-screen').style.display = 'flex';
+  
+  // Add red flash
+  const flash = document.createElement('div');
+  flash.className = 'red-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 500);
+  
+  startHackSequence();
+}
+
+function startHackSequence() {
+  const DURATION = 10000; // 10 seconds
+  const startTime = Date.now();
+  const pwLen = targetPassword.length;
+  
+  const terminalEl = document.getElementById('terminal-content');
+  const crackCharsEl = document.getElementById('crack-chars');
+  const crackStatusEl = document.getElementById('crack-status');
+  const progressFill = document.getElementById('progress-fill');
+  const progressPercent = document.getElementById('progress-percent');
+  const hackTimer = document.getElementById('hack-timer');
+  const statAttempts = document.getElementById('stat-attempts');
+  const statThreads = document.getElementById('stat-threads');
+  const statSpeed = document.getElementById('stat-speed');
+  const statFirewall = document.getElementById('stat-firewall');
+  const networkEl = document.getElementById('network-content');
+  
+  let attempts = 0;
+  let threads = 1;
+  let crackedPositions = new Set();
+  let currentDisplay = Array(pwLen).fill('-');
+  
+  const terminalMessages = [
+    { t: 0, msg: '[INIT] Initializing breach protocol...', cls: 'info' },
+    { t: 300, msg: '[INIT] Loading exploit modules...', cls: '' },
+    { t: 600, msg: '[INIT] brute_force.so loaded', cls: 'success' },
+    { t: 900, msg: '[INIT] packet_inject.so loaded', cls: 'success' },
+    { t: 1200, msg: '[INIT] firewall_bypass.so loaded', cls: 'success' },
+    { t: 1500, msg: '[CONN] Scanning target ports...', cls: 'info' },
+    { t: 1800, msg: '[CONN] Port 22: OPEN', cls: 'warning' },
+    { t: 2000, msg: '[CONN] Port 80: OPEN', cls: 'warning' },
+    { t: 2200, msg: '[CONN] Port 443: OPEN', cls: 'warning' },
+    { t: 2500, msg: '[CONN] Port 3306: FILTERED', cls: 'error' },
+    { t: 2800, msg: '[CONN] Port 8080: OPEN', cls: 'warning' },
+    { t: 3100, msg: '[AUTH] Detecting authentication layer...', cls: 'info' },
+    { t: 3400, msg: '[AUTH] SHA-256 encryption detected', cls: 'warning' },
+    { t: 3700, msg: '[AUTH] Attempting dictionary attack...', cls: '' },
+    { t: 3900, msg: '[AUTH] Dictionary attack failed', cls: 'error' },
+    { t: 4200, msg: '[AUTH] Switching to brute force mode', cls: 'warning' },
+    { t: 4500, msg: '[FW] Firewall detected - Layer 7', cls: 'error' },
+    { t: 4800, msg: '[FW] Initiating SYN flood bypass', cls: 'warning' },
+    { t: 5100, msg: '[FW] Firewall rule bypassed!', cls: 'success' },
+    { t: 5400, msg: '[FW] Firewall DEACTIVATED', cls: 'success' },
+    { t: 5700, msg: '[CRACK] Starting brute force engine...', cls: 'warning' },
+    { t: 6000, msg: '[CRACK] GPU acceleration enabled', cls: 'success' },
+    { t: 6300, msg: '[CRACK] Processing 500K combinations/s', cls: '' },
+    { t: 6600, msg: '[CRACK] Key space reducing...', cls: 'info' },
+    { t: 7000, msg: '[CRACK] Pattern match found!', cls: 'success' },
+    { t: 7500, msg: '[CRACK] Decrypting final sequence...', cls: 'warning' },
+    { t: 8000, msg: '[CRACK] Password fragments assembling...', cls: '' },
+    { t: 8500, msg: '[CRACK] Verification in progress...', cls: 'info' },
+    { t: 9000, msg: '[CRACK] ACCESS GRANTED', cls: 'success' },
+    { t: 9300, msg: '[EXTRACT] Dumping credentials...', cls: 'warning' },
+    { t: 9600, msg: '[EXTRACT] Data exfiltration complete', cls: 'success' },
+  ];
+  
+  // Schedule terminal messages
+  terminalMessages.forEach(m => {
+    setTimeout(() => {
+      const line = document.createElement('div');
+      line.className = 'terminal-line ' + m.cls;
+      line.textContent = m.msg;
+      terminalEl.appendChild(line);
+      terminalEl.scrollTop = terminalEl.scrollHeight;
+    }, m.t);
+  });
+  
+  // Crack each digit over time
+  const crackSchedule = [];
+  for (let i = 0; i < pwLen; i++) {
+    // Stagger the cracking - earlier digits crack first
+    const crackTime = 3000 + (i * (5000 / pwLen)) + Math.random() * 1000;
+    crackSchedule.push({ pos: i, time: crackTime });
+  }
+  // Sort by time
+  crackSchedule.sort((a, b) => a.time - b.time);
+  
+  // Main update interval
+  hackInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / DURATION, 1);
+    
+    // Update timer
+    const remaining = Math.max(0, Math.ceil((DURATION - elapsed) / 1000));
+    hackTimer.textContent = '00:' + String(remaining).padStart(2, '0');
+    
+    // Update progress
+    const pct = Math.floor(progress * 100);
+    progressFill.style.width = pct + '%';
+    progressPercent.textContent = pct + '%';
+    
+    // Change progress color near end
+    if (progress > 0.8) {
+      progressFill.style.background = 'linear-gradient(90deg, #00ff41, #ff0040)';
+      progressFill.style.boxShadow = '0 0 10px #ff0040';
+    }
+    
+    // Update stats
+    attempts += Math.floor(Math.random() * 50000 + 10000);
+    statAttempts.textContent = (attempts / 1000).toFixed(0) + 'K';
+    
+    if (elapsed > 2000) threads = Math.min(64, threads + Math.floor(Math.random() * 3));
+    statThreads.textContent = threads;
+    
+    const speed = Math.floor(200 + progress * 800 + Math.random() * 100);
+    statSpeed.textContent = speed;
+    
+    if (elapsed > 5100) {
+      statFirewall.textContent = 'DOWN';
+      statFirewall.classList.remove('danger');
+      statFirewall.style.color = '#00ff41';
+    }
+    
+    // Crack positions
+    crackSchedule.forEach(cs => {
+      if (elapsed >= cs.time && !crackedPositions.has(cs.pos)) {
+        crackedPositions.add(cs.pos);
+      }
+    });
+    
+    // Update crack display
+    for (let i = 0; i < pwLen; i++) {
+      if (crackedPositions.has(i)) {
+        currentDisplay[i] = targetPassword[i];
+      } else {
+        currentDisplay[i] = String(Math.floor(Math.random() * 10));
+      }
+    }
+    
+    crackCharsEl.textContent = currentDisplay.join(' ');
+    
+    // Color cracked chars differently
+    let html = '';
+    for (let i = 0; i < pwLen; i++) {
+      if (crackedPositions.has(i)) {
+        html += `<span style="color:#00ff41;text-shadow:0 0 15px #00ff41">${targetPassword[i]}</span> `;
+      } else {
+        html += `<span style="color:#ff0040">${currentDisplay[i]}</span> `;
+      }
+    }
+    crackCharsEl.innerHTML = html;
+    
+    // Update crack status
+    const cracked = crackedPositions.size;
+    const total = pwLen;
+    if (cracked === 0) {
+      crackStatusEl.textContent = 'SCANNING...';
+    } else if (cracked < total) {
+      crackStatusEl.textContent = `CRACKING: ${cracked}/${total} CHARS`;
+    } else {
+      crackStatusEl.textContent = 'PASSWORD CRACKED!';
+      crackStatusEl.style.color = '#00ff41';
+    }
+    
+    // Network packets
+    if (Math.random() > 0.5) {
+      const ip1 = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+      const ip2 = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+      const port = [22, 80, 443, 3306, 8080, 8443][Math.floor(Math.random()*6)];
+      const pkt = document.createElement('div');
+      pkt.textContent = `> ${ip1}:${port} → ${ip2}:${port} [SYN] ${Math.floor(Math.random()*1000)}B`;
+      networkEl.appendChild(pkt);
+      if (networkEl.children.length > 8) networkEl.removeChild(networkEl.firstChild);
+    }
+    
+    // IP scroll
+    updateIPScroll();
+    
+    // Check if done
+    if (elapsed >= DURATION) {
+      clearInterval(hackInterval);
+      showBreachScreen();
+    }
+  }, 100);
+  
+  // Extra: random glitch effects
+  const glitchInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    if (elapsed > 4000 && Math.random() > 0.6) {
+      document.getElementById('hack-screen').classList.add('glitch');
+      setTimeout(() => {
+        document.getElementById('hack-screen').classList.remove('glitch');
+      }, 150);
+    }
+    if (elapsed >= DURATION) clearInterval(glitchInterval);
+  }, 500);
+}
+
+function updateIPScroll() {
+  const ipEl = document.getElementById('ip-scroll');
+  let ips = [];
+  for (let i = 0; i < 5; i++) {
+    ips.push(`${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`);
+  }
+  ipEl.textContent = ips.join('  ◆  ');
+}
+
+function showBreachScreen() {
+  // Flash
+  const flash = document.createElement('div');
+  flash.className = 'red-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 500);
+  
+  setTimeout(() => {
+    document.getElementById('hack-screen').style.display = 'none';
+    document.getElementById('breach-screen').style.display = 'flex';
+    document.getElementById('breach-password-value').textContent = targetPassword;
+    
+    const now = new Date();
+    document.getElementById('breach-timestamp').textContent = 
+      `TIMESTAMP: ${now.toISOString()} | STATUS: COMPROMISED | SEVERITY: CRITICAL`;
+    
+    // Create celebration particles
+    createParticles();
+  }, 500);
+}
+
+function createParticles() {
+  const colors = ['#00ff41', '#00cc33', '#ff0040', '#00aaff'];
+  for (let i = 0; i < 50; i++) {
+    const particle = document.createElement('div');
+    particle.style.cssText = `
+      position: fixed;
+      width: ${Math.random() * 4 + 2}px;
+      height: ${Math.random() * 4 + 2}px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius: 50%;
+      z-index: 30;
+      pointer-events: none;
+      left: 50%;
+      top: 50%;
+      box-shadow: 0 0 6px currentColor;
+    `;
+    document.body.appendChild(particle);
+    
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 300 + 100;
+    const dx = Math.cos(angle) * speed;
+    const dy = Math.sin(angle) * speed;
+    
+    particle.animate([
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0)`, opacity: 0 }
+    ], {
+      duration: 1500 + Math.random() * 1000,
+      easing: 'ease-out',
+      fill: 'forwards'
+    }).onfinish = () => particle.remove();
+  }
+}
+
+// Focus input on load
+window.addEventListener('load', () => {
+  passwordInput.focus();
+});
+</script>
+</body>
+</html>
